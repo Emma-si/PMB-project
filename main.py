@@ -9,18 +9,25 @@ import tqdm
 
 
 
+# TO DO: ELIMINATE GLOBAL VARIABLE
+pbar = None   
 
-pbar = None   #variabile globale della barra di progresso
+def protein_worker(protein_id, genome_name, snp_name):   
+    '''
+    Input: genome name, snp name, protein id
 
-def protein_worker(protein_id):   #viene chiamata dal processo
-    # Tiro fuori la sequenza dalle proteine 
+    Output: protein dictionary
 
-   
-    #importo il genoma nel processo (non posso accederci da altro processo)
-    myGeno = Genome(name = 'GRCh37.75', SNPs="mySNPmerged02")
-    #prendo la proteina con l'ID passato in argomento
+    This function extracts the modified sequence of the single protein.
+    '''
+ 
+    # Import genome in the single process, required because it is not possible to access fro other processes
+    myGeno = Genome(name = genome_name, SNPs = snp_name)
+
+    # Selection of the single protein
     protein = myGeno.get(Protein, id = protein_id)[0]
-    #definisco il dizionario
+
+    # Dictionary definition
     prot_dict = {}
     prot_dict["id"] = protein.id
     prot_dict["transcript_id"] = protein.transcript.id
@@ -29,20 +36,30 @@ def protein_worker(protein_id):   #viene chiamata dal processo
     try:
         prot_dict["sequence"] = protein.sequence 
     except:
-        prot_dict["sequence"] = "none"  #stampa none se non è presente sequenza
+        prot_dict["sequence"] = "none"  
 
-    return prot_dict
+    return prot_dict, snp_name
 
-def write_on_file(prot):    #gli passo il dizionario (output del worker)
 
-    with open('tabella_merged02.txt', 'a') as file:
+def write_on_file(prot, snp_name): 
+    '''
+    Input: snp name, protein dictionary
+
+    Callback function that write on file the sequences.
+    '''
+
+    table_name = snp_name + ".txt"
+    
+    with open(table_name, 'a') as file:
         file.write(prot["id"] + "\t" +
                 prot["transcript_id"] + "\t" +
                 prot["name"] + "\t" +
                 prot["chromosome_number"] + "\t" +
                 prot["sequence"] + "\t" +
                 '\n')
-        pbar.update(1)  #update della barra di progresso
+
+        # Update the progress bar
+        pbar.update(1) 
 
 
 
@@ -73,26 +90,27 @@ if __name__ == "__main__":
         myGeno = Genome(name = genome_name, SNPs = snp_name)
     except KeyError:
         B.importRemoteGenome(genome_name)
+        myGeno = Genome(name = genome_name, SNPs = snp_name)
 
-     proteins = myGeno.get(Protein)
+    # Get proteins from genome
+    proteins = myGeno.get(Protein)
     number_of_proteins = len(proteins) 
-
 
     # Progress bar definition
     pbar = tqdm.tqdm(total=number_of_proteins)
-    
 
-    #creo una lista di id delle proteine (che posso passare)
+    # Create a list of protein ids to pass to processes
     protein_ids = [p.id for p in proteins]
 
-    #creo n processi
+    # Define the processes based on the available cpu
     pool = mp.Pool(mp.cpu_count()-3)
 
-   
+    # Start processes in asyncronous way
     for protein_id in protein_ids:
-        pool.apply_async(protein_worker, args = (protein_id, ), callback = write_on_file) 
-        #applica in modo asincrono le funzioni protein worker (con i suoi args) e callback
+        pool.apply_async(protein_worker, args = (protein_id, genome_name, snp_name, ), 
+                                         callback = write_on_file) 
 
-    pool.close() #chiude il processo corrente
-    pool.join()  #aspetta che tutti siano chiusi
+    # Close the current process and wait for the other to close
+    pool.close() 
+    pool.join() 
     
