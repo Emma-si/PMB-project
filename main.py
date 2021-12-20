@@ -1,15 +1,19 @@
 import sys
 import argparse
+
+import utils
+
 import pyGeno.bootstrap as B
 from pyGeno.importation.SNPs import *
 from pyGeno.Genome import *
 import multiprocessing as mp   
-import time
+# import time
 import tqdm 
 
+from pyGeno.SNPFiltering import SNPFilter
+from pyGeno.SNPFiltering import SequenceSNP
 
 
-# TO DO: ELIMINATE GLOBAL VARIABLE
 pbar = None   
 
 def protein_worker(protein_id, genome_name, snp_name):   
@@ -22,7 +26,7 @@ def protein_worker(protein_id, genome_name, snp_name):
     '''
  
     # Import genome in the single process, required because it is not possible to access fro other processes
-    myGeno = Genome(name = genome_name, SNPs = snp_name)
+    myGeno = Genome(name = genome_name, SNPs = snp_name, SNPFilter = MyFilter())
 
     # Selection of the single protein
     protein = myGeno.get(Protein, id = protein_id)[0]
@@ -38,16 +42,16 @@ def protein_worker(protein_id, genome_name, snp_name):
     except:
         prot_dict["sequence"] = "none"  
 
-    return prot_dict, snp_name
+    return [prot_dict, snp_name]
 
 
-def write_on_file(prot, snp_name): 
+def write_on_file(input): 
     '''
     Input: snp name, protein dictionary
 
     Callback function that write on file the sequences.
     '''
-
+    prot, snp_name = input
     table_name = snp_name + ".txt"
     
     with open(table_name, 'a') as file:
@@ -62,7 +66,16 @@ def write_on_file(prot, snp_name):
         pbar.update(1) 
 
 
+class MyFilter(SNPFilter) :
+    def init(self) :
+            pass
 
+    def filter(self, chromosome, **SNPs) :
+
+        for snpSet, snp in SNPs.items() :
+            return SequenceSNP(snp.alt)
+        
+        return None
 
 
 
@@ -71,19 +84,21 @@ if __name__ == "__main__":
     # Command line parser
     argparser = argparse.ArgumentParser(prog = 'PMB_project', description = 'PMB_project')
     argparser.add_argument('--genome', type = str, help = 'set the reference genome', default = "", required = True)
-    argparser.add_argument('--snp', type = str, help = 'set the snp path', default = "", required = False)
-    argparser.add_argument('--snp_name', type = str, help = 'set the snp name', default = "", required = True)
+    argparser.add_argument('--vcf_file', type = str, help = 'set the vcf file name', default = "", required = True)
 
     # Parameters
     args = argparser.parse_args()
     genome_name = args.genome
-    snp_path = args.snp
-    snp_name = args.snp_name
+    vcf_file = args.vcf_file
 
-    # If the user specify the snp path to insert, the snp is imported
-    # TO DO ADD TRY EXCEPT
-    if snp_path != '':
-        importSNPs(snp_path)
+    # Create snp file
+    gzipped_vcf_file = utils.zip_vcf_file(vcf_file)
+    snp_file, snp_name = utils.create_snp_file(gzipped_vcf_file)
+
+    try:
+        importSNPs(snp_file)
+    except KeyError:
+        print("Existing SNP")
 
     # Import the reference genome and if not present download it
     try:
