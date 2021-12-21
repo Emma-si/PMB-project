@@ -23,7 +23,7 @@ In this format only the variations are stored with a reference genome.
 The structure of the file is divided into an header, which provides metadata describing the body of the file, and a body, which contains the actual data. 
 
 It is important to keep in mind that VCF files come in many formats an Pygeno only supports a certain number of them.   
-In our case some problem with the parser occurred and files generated from PLINCK 
+In our case some problem with the parser occurred and files generated from PLINK 
 have been chosen as they came already filtered, so as not to modify the Pygeno parser.
 
 ### titolo?????? DA QUI SISTEMARE
