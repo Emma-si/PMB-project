@@ -39,3 +39,16 @@ def create_snp_file(vcf_zipped_file):
         tar.add(vcf_zipped_file, arcname = vcf_zipped_file.split("/")[-1])
 
     return vcf_tar_file, snp_name
+
+def split_list(complete_list : list, n : int):
+    """
+    Function that split a list in n chunks
+    Inputs:
+        complete_list : list to be divided
+        n : number of chuncks to split the list in
+    Outputs:
+        chunks : list of sublists
+    """
+    k, m = divmod(len(complete_list), n)
+    chunks = [complete_list[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n)]
+    return chunks
