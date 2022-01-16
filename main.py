@@ -14,56 +14,53 @@ from pyGeno.SNPFiltering import SNPFilter
 from pyGeno.SNPFiltering import SequenceSNP
 
 
-pbar = None   
-
-def protein_worker(protein_id, genome_name, snp_name):   
+def protein_worker( args ):
     '''
-    Input: genome name, snp name, protein id
+    Input: genome name, snp name, list protein ids
 
     Output: protein dictionary
 
-    This function extracts the modified sequence of the single protein.
+    This function extracts the modified sequence of a list of proteins.
     '''
- 
+    # print(args)
+    i = args[0]
+    reference_genome = args[1]
+    snp_name = args[2]
+    protein_ids = args[3]
+    pbar = tqdm.tqdm(total=len(protein_ids), desc = "Process %d"%i, position = i)
+
+    table_name = "tmp%d_%s.txt" % (i, snp_name)
+
     # Import genome in the single process, required because it is not possible to access fro other processes
-    myGeno = Genome(name = genome_name, SNPs = snp_name, SNPFilter = MyFilter())
+    myGeno = Genome(name = reference_genome, SNPs = snp_name, SNPFilter = MyFilter())
 
-    # Selection of the single protein
-    protein = myGeno.get(Protein, id = protein_id)[0]
+    for protein_id in protein_ids:
+        # Selection of the single protein
+        protein = myGeno.get(Protein, id = protein_id)[0]
 
-    # Dictionary definition
-    prot_dict = {}
-    prot_dict["id"] = protein.id
-    prot_dict["transcript_id"] = protein.transcript.id
-    prot_dict["name"] = protein.name
-    prot_dict["chromosome_number"] = protein.chromosome.number
-    try:
-        prot_dict["sequence"] = protein.sequence 
-    except:
-        prot_dict["sequence"] = "none"  
+        # Dictionary definition
+        transcript_id = protein.transcript.id
+        name = protein.name
+        chromosome_number = protein.chromosome.number
+        try:
+            sequence = protein.sequence 
+        except:
+            sequence = "none"
 
-    return [prot_dict, snp_name]
+        with open(table_name, 'a+') as file:
+            file.write(protein_id + "\t" +
+                    transcript_id + "\t" +
+                    name + "\t" +
+                    chromosome_number + "\t" +
+                    sequence + "\t" +
+                    '\n')
+
+            # Update the progress bar
+            pbar.update(1)  
 
 
-def write_on_file(input): 
-    '''
-    Input: snp name, protein dictionary
 
-    Callback function that write on file the sequences.
-    '''
-    prot, snp_name = input
-    table_name = snp_name + ".txt"
-    
-    with open(table_name, 'a') as file:
-        file.write(prot["id"] + "\t" +
-                prot["transcript_id"] + "\t" +
-                prot["name"] + "\t" +
-                prot["chromosome_number"] + "\t" +
-                prot["sequence"] + "\t" +
-                '\n')
 
-        # Update the progress bar
-        pbar.update(1) 
 
 
 class MyFilter(SNPFilter) :
@@ -109,23 +106,23 @@ if __name__ == "__main__":
 
     # Get proteins from genome
     proteins = myGeno.get(Protein)
-    number_of_proteins = len(proteins) 
-
-    # Progress bar definition
-    pbar = tqdm.tqdm(total=number_of_proteins)
+    
 
     # Create a list of protein ids to pass to processes
     protein_ids = [p.id for p in proteins]
 
+    n_processes = mp.cpu_count()-3
+    chunks = split_list(protein_ids, n_processes)
+
     # Define the processes based on the available cpu
-    pool = mp.Pool(mp.cpu_count()-3)
+    pool = mp.Pool(n_processes)
 
     # Start processes in asyncronous way
-    for protein_id in protein_ids:
-        pool.apply_async(protein_worker, args = (protein_id, genome_name, snp_name, ), 
-                                         callback = write_on_file) 
+    for i in range(n_processes):
+        pool.apply_async(protein_worker, args = ([i, genome_name, snp_name, chunks[i]],))
 
     # Close the current process and wait for the other to close
     pool.close() 
     pool.join() 
     
+    deleteSNPs(snp_name)
