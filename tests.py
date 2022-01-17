@@ -23,5 +23,33 @@ def test_chuncks_same_length(l, n):
         union += chunk
     assert union == l
 
-if __name__ == "__main__":
+
+def test_merge_tmp_tables(table_name, seg_tables_list):
+    """
+    Tests:
+        - if the sum of tmp tables has the same length of the entire table
+    """
+    with open(table_name, 'r') as ft:
+        table_lines = len(ft.readlines())
+
+
+    seg_lines = 0
+    for seg_table in seg_tables_list:
+        with open(seg_table, 'r') as st:
+            l = len(st.readlines())
+            seg_lines += l
+
+    assert table_lines == seg_lines
+
+if name == "main":
     test_chuncks_same_length()
+
+    test_merge_tmp_tables("test/SNP_chr21_NA20502.txt", ['test/tmp0_SNP_chr21_NA20502.txt', 
+                                                          'test/tmp1_SNP_chr21_NA20502.txt', 
+                                                          'test/tmp2_SNP_chr21_NA20502.txt', 
+                                                          'test/tmp3_SNP_chr21_NA20502.txt', 
+                                                          'test/tmp4_SNP_chr21_NA20502.txt', 
+                                                          'test/tmp5_SNP_chr21_NA20502.txt', 
+                                                          'test/tmp6_SNP_chr21_NA20502.txt', 
+                                                          'test/tmp7_SNP_chr21_NA20502.txt', 
+                                                          'test/tmp8_SNP_chr21_NA20502.txt'])
