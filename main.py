@@ -13,58 +13,57 @@ from pyGeno.Genome import *
 
 def protein_worker( args ):
     '''
-    Input: reference genome name, snp name, list protein ids
+    Input: args = [process id, reference genome name, snp name, list protein ids]
 
     This function extracts the modified sequence of a list of proteins
     and saves it into a temporary tab separated file.
     '''
-    # print(args)
-    i = args[0]
+
+    process_id = args[0]
     reference_genome = args[1]
     snp_name = args[2]
     protein_ids = args[3]
-    pbar = tqdm.tqdm(total=len(protein_ids), desc = "Process %d"%i, position = i)
 
-    table_name = "tmp%d_%s.txt" % (i, snp_name)
+    progress_bar = tqdm.tqdm(total=len(protein_ids), desc = "Process %d" % process_id, position = process_id)
 
-    # Import genome in the single process, required because it is not possible to access fro other processes
+    table_name = "tmp%d_%s.txt" % (process_id, snp_name)
+
+    # Import genome in the single process
+    # Required because it is not possible to access the genome from other processes
     myGeno = Genome(name = reference_genome, SNPs = snp_name, SNPFilter = MyFilter())
 
     for protein_id in protein_ids:
-        # Selection of the single protein
         protein = myGeno.get(Protein, id = protein_id)[0]
 
-        # Dictionary definition
         transcript_id = protein.transcript.id
         name = protein.name
         chromosome_number = protein.chromosome.number
+        # Assign none if non-existent protein sequence.
         try:
             sequence = protein.sequence 
         except:
             sequence = "none"
 
         with open(table_name, 'a+') as file:
-            file.write(protein_id + "\t" +
+            row = protein_id + "\t" +
                     transcript_id + "\t" +
                     name + "\t" +
                     chromosome_number + "\t" +
                     sequence + "\t" +
-                    '\n')
+                    '\n'
+            file.write(row)
 
-            # Update the progress bar
-            pbar.update(1)  
-
-
-
-
-
+            progress_bar.update(1)  
 
 class MyFilter(SNPFilter) :
+    '''
+    Custom filter that, given the snp alteration, subsitutes it into the protein sequence. 
+    '''
     def init(self) :
             pass
 
     def filter(self, chromosome, **SNPs) :
-
+    
         for snpSet, snp in SNPs.items() :
             return SequenceSNP(snp.alt)
         
@@ -88,6 +87,7 @@ if __name__ == "__main__":
     gzipped_vcf_file = utils.zip_vcf_file(vcf_file)
     snp_file, snp_name = utils.create_snp_file(gzipped_vcf_file)
 
+    # Print message if already existing SNP
     try:
         importSNPs(snp_file)
     except KeyError:
@@ -100,14 +100,13 @@ if __name__ == "__main__":
         B.importRemoteGenome(genome_name)
         myGeno = Genome(name = genome_name, SNPs = snp_name)
 
-    # Get proteins from genome
-    proteins = myGeno.get(Protein)
     
-
-    # Create a list of protein ids to pass to processes
+    proteins = myGeno.get(Protein)
     protein_ids = [p.id for p in proteins]
 
     n_processes = mp.cpu_count()-3
+
+    # Create the sublists to give in input to the different processes
     chunks = split_list(protein_ids, n_processes)
 
     # Define the processes based on the available cpu
@@ -121,11 +120,11 @@ if __name__ == "__main__":
     pool.close() 
     pool.join() 
     
+    # Delete SNP to avoid memory issues
     deleteSNPs(snp_name)
 
     table_name = snp_name + ".txt"
     seg_tables_list = glob.glob("tmp*.txt")
-
     merge_tmp_tables(table_name, seg_tables_list)
 
 
