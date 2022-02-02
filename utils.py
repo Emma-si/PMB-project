@@ -52,3 +52,11 @@ def split_list(complete_list : list, n : int):
     k, m = divmod(len(complete_list), n)
     chunks = [complete_list[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n)]
     return chunks
+
+def merge_tmp_tables(table_name, seg_tables_list):
+    seg_tables_list.sort()
+
+    with open(table_name,'wb+') as table:
+        for f in seg_tables_list:
+            with open(f,'rb') as seg:
+                shutil.copyfileobj(seg, table)

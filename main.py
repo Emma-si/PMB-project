@@ -1,26 +1,22 @@
-import sys
 import argparse
-
+import glob
 import utils
-
-import pyGeno.bootstrap as B
-from pyGeno.importation.SNPs import *
-from pyGeno.Genome import *
 import multiprocessing as mp   
-# import time
 import tqdm 
 
 from pyGeno.SNPFiltering import SNPFilter
 from pyGeno.SNPFiltering import SequenceSNP
+import pyGeno.bootstrap as B
+from pyGeno.importation.SNPs import *
+from pyGeno.Genome import *
 
 
 def protein_worker( args ):
     '''
-    Input: genome name, snp name, list protein ids
+    Input: reference genome name, snp name, list protein ids
 
-    Output: protein dictionary
-
-    This function extracts the modified sequence of a list of proteins.
+    This function extracts the modified sequence of a list of proteins
+    and saves it into a temporary tab separated file.
     '''
     # print(args)
     i = args[0]
@@ -126,3 +122,10 @@ if __name__ == "__main__":
     pool.join() 
     
     deleteSNPs(snp_name)
+
+    table_name = snp_name + ".txt"
+    seg_tables_list = glob.glob("tmp*.txt")
+
+    merge_tmp_tables(table_name, seg_tables_list)
+
+
