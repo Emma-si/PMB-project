@@ -1,2 +1,3 @@
-pyGeno 
-hypothesis
+pyGeno==2.0.0
+hypothesis>=6.34.1
+tqdm>=4.62.3

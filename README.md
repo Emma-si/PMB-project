@@ -12,7 +12,7 @@ The final data set (associated with the third and final phase: 2nd May 2013) con
 Low coverage and exome sequence data are present for all of these individuals, 24 individuals were also sequenced to high coverage for validation purposes.  
 
 ### Pygeno package
-The package that has been chosen in order to conduct this project analysis is called **Pygeno** (http://pygeno.iric.ca/index.html), a Phyton package for precision medicine and proteogenomics. 
+The package that has been chosen in order to conduct this project analysis is called **Pygeno** (https://github.com/tariqdaouda/pyGeno), a Phyton package for precision medicine and proteogenomics. 
 
 ![Pygeno Logo](logo.png)
 
@@ -22,9 +22,56 @@ Is a format used in bioinformatics for storing gene sequence variations.
 In this format only the variations are stored with a reference genome. 
 The structure of the file is divided into an header, which provides metadata describing the body of the file, and a body, which contains the actual data. 
 
-It is important to keep in mind that VCF files come in many formats an Pygeno only supports a certain number of them.   
+It is important to keep in mind that VCF files come in many formats and Pygeno only supports a certain number of them.   
 In our case some problem with the parser occurred and files generated from PLINK 
 have been chosen as they came already filtered, so as not to modify the Pygeno parser.
+For further information look at https://github.com/tariqdaouda/pyGeno.
 
-### titolo?????? DA QUI SISTEMARE
-To estimate from the genomic data, in the VCF format, the amino acidic requirement.
+## Installation
+To install the application the user has to clone the repository [PMB-project](https://github.com/Emma-si/PMB-project.git) and use pip:
+ ```
+ git clone https://github.com/Emma-si/PMB-project.git
+ cd PMB-project
+ pip install -r requirements.txt
+ ```
+The file requirements.txt already comprehends all the required packages and specifies also the necessary versions to run the program. 
+
+#### **Additional packages**
+Besides the python packages, to run the application other two system packages are necessary. 
+To fasten the compression of the input files, the program uses these packages runned from command line: gzip and tar. 
+If they are not present in your system, please install them from command line in the following way. 
+
+For Debian/Ubuntu:
+```
+sudo apt install gzip 
+sudo apt install tar
+```
+
+**Attention** It is important to know that this application is only compatible with Linux and macOS machines.
+
+## Usage 
+When installed, the user can run the program from command line.
+The python version used in this project is python3. 
+```
+python3 main.py --genome <reference genome> --vcf_file <vcf file path>. 
+```
+where: 
+- ```<reference genome>``` is the the identifier for the genome to use as reference. 
+- ```<vcf file path>``` is the path to the vcf file in the user computer. 
+
+#### **List of available reference genome**
+The program only supports reference genome already contained in the Pygeno package list. 
+Here the list is reported for clarity and ease of use.
+
+- Human -> GRCh37.75
+- Human -> GRCh37.75_Y-Only
+- Human -> GRCh38.78
+- Mouse -> GRCm38.78
+
+## Structure of the project 
+
+After setting in input the reference genome (among the ones available in the above list) and the path of the vcf file the user intend to utilize, the program compresses the files which, in order to be used by Pygeno, must be presented in the 'tar.gz' format. 
+
+After the compression, an snp file is created with the information collected from the original vcf file. 
+An SNP (single nucleotide polymorphism) is a germline substitution of a single nucleotide at a specific position in the genome. 
+
