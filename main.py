@@ -77,11 +77,17 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser(prog = 'PMB_project', description = 'PMB_project')
     argparser.add_argument('--genome', type = str, help = 'set the reference genome', default = "", required = True)
     argparser.add_argument('--vcf_file', type = str, help = 'set the vcf file name', default = "", required = True)
+    argparser.add_argument('--num_processes', type = int, help = 'set the number of processes', default = 0, required = False)
+
 
     # Parameters
     args = argparser.parse_args()
     genome_name = args.genome
     vcf_file = args.vcf_file
+    n_processes = args.num_processes
+
+    if n_processes == 0: 
+        n_processes = mp.cpu_count() - 3
 
     # Create snp file
     gzipped_vcf_file = utils.zip_vcf_file(vcf_file)
@@ -103,8 +109,6 @@ if __name__ == "__main__":
     
     proteins = myGeno.get(Protein)
     protein_ids = [p.id for p in proteins]
-
-    n_processes = mp.cpu_count()-3
 
     # Create the sublists to give in input to the different processes
     chunks = split_list(protein_ids, n_processes)
