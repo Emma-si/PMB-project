@@ -19,12 +19,11 @@ The package that has been chosen in order to conduct this project analysis is ca
 ### VCF files
 The data that was analyzed was provided in **VCF format** (Variant Call Format).  
 Is a format used in bioinformatics for storing gene sequence variations.
-In this format only the variations are stored with a reference genome. 
+In this format only the variations are stored relative to a reference genome. 
 The structure of the file is divided into an header, which provides metadata describing the body of the file, and a body, which contains the actual data. 
 
 It is important to keep in mind that VCF files come in many formats and Pygeno only supports a certain number of them.   
-In our case some problem with the parser occurred and files generated from PLINK 
-have been chosen as they came already filtered, so as not to modify the Pygeno parser.
+In our case some problem with the parser occurred and files generated from PLINK have been chosen as they came already filtered, so as not to modify the Pygeno parser.
 For further information look at https://github.com/tariqdaouda/pyGeno.
 
 ## Installation
@@ -36,28 +35,18 @@ To install the application the user has to clone the repository [PMB-project](ht
  ```
 The file requirements.txt already comprehends all the required packages and specifies also the necessary versions to run the program. 
 
-#### **Additional packages**
-Besides the python packages, to run the application other two system packages are necessary. 
-To fasten the compression of the input files, the program uses these packages runned from command line: gzip and tar. 
-If they are not present in your system, please install them from command line in the following way. 
-
-For Debian/Ubuntu:
-```
-sudo apt install gzip 
-sudo apt install tar
-```
-
-**Attention** It is important to know that this application is only compatible with Linux and macOS machines.
+**Attention**: It is important to know that this application is only compatible with Linux and macOS machines.
 
 ## Usage 
 When installed, the user can run the program from command line.
 The python version used in this project is python3. 
 ```
-python3 main.py --genome <reference genome> --vcf_file <vcf file path>. 
+python3 main.py --genome <reference genome> --vcf_file <vcf file path> --num_processes <number of processes>
 ```
 where: 
 - ```<reference genome>``` is the the identifier for the genome to use as reference. 
 - ```<vcf file path>``` is the path to the vcf file in the user computer. 
+- ```<number of processes>``` is the number of processes to use in the multiprocessing (**Not required**. If not specified the setting is automatic according to the available cpu).
 
 #### **List of available reference genome**
 The program only supports reference genome already contained in the Pygeno package list. 
@@ -70,8 +59,50 @@ Here the list is reported for clarity and ease of use.
 
 ## Structure of the project 
 
-After setting in input the reference genome (among the ones available in the above list) and the path of the vcf file the user intend to utilize, the program compresses the files which, in order to be used by Pygeno, must be presented in the 'tar.gz' format. 
+After setting in input the reference genome (among the ones available in the above list), the path of the vcf file the user intend to utilize and possibly the number of processes, the program compresses the files which, in order to be used by Pygeno, must be presented in the 'tar.gz' format. 
 
 After the compression, an snp file is created with the information collected from the original vcf file. 
 An SNP (single nucleotide polymorphism) is a germline substitution of a single nucleotide at a specific position in the genome. 
+According to Pygeno requirements, the creation of the snp presupposes that the files are organized and presented in a specific way. 
+A *manifest.ini* file must be included in the same archive as the gzipped vcf file. 
+This *manifest.ini* file contains a list of information about the snp and the mantainer that, in this program, are compiled with dummy data.
+
+### Set the number of processes
+The program gives the user the possibility to define, as input, the number of processes to use. 
+The choice of the number of processes should be carefully considered. Too many processes could, in fact, create problems with the cpu without bringing benefits. 
+If the user does not define an optimal number of processes, this is automatically assigned by the program based on the available cpu. 
+
+A pool of processes is initialized in order to get a speedup in the processing, with each process running a separate chunk of the protein ids list that needs to be anlyzed.
+The list is passed to the protein worker function wich extracts the modified sequence of a list of proteins and filters it by substituting the variations. 
+
+### Asynchronous multiprocessing
+The choice of the processes parallelization has been made to reduce the processing time which otherwise, for a complete genome would have been extremely long. 
+By parallelizing the processing, breaking into chunks and running each chunk separately, a speedup can be obtained. 
+The multiprocessing package helps using as many core as wanted.
+The choice of asynchronous processing was made considering that, in the case of the program, each process can work independently from the others, without having to wait for a response. 
+
+When all the processes are closed, all the temporary tables created for each process are united in a final merged table that can be visualized as output in a separate file. 
+
+To avoid causing memory issues, since the load of data to analyze can sometimes be substantial, all the temporary tables and the loaded snp are deleted. 
+
+## Testing 
+In the "test" folder, all the data required to run the test.py file can be found. 
+The latter contains the tests runned in order assert the program precision, using hypothesis testing. 
+To run it from the command line: 
+```
+python3 test.py 
+```
+
+## An example 
+This section has the purpose of making the use of the application clearer to the user in order to facilitate its use. 
+Below follows an example of the program running, which can be reproduced with the files contained in the "example" folder.
+
+The vcf file present in this folder is a small selection of genome variations on chromosome twenty-one alone.
+The choice to present such a small file as an example was made to allow in a short time to understand the functioning and expected results of the program.
+The reference genome in this case is GRCh37.75.
+To run it from command line: 
+```
+python3 main.py --genome GRCh37.75 --vcf_file ./example/chr21_NA20502.vcf
+```
+ 
 
