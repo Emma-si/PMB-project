@@ -1,5 +1,6 @@
 import gzip
 import tarfile
+import shutil
 
 def zip_vcf_file(vcf_file : str):
     """
@@ -74,7 +75,7 @@ def split_list(complete_list : list, n : int):
     return chunks
 
 def merge_tmp_tables(table_name : str, tmp_tables_list : list):
-     """
+    """
     Function that merges together the temporary files created by the 
     different processes into a single final table
     Inputs:

@@ -70,15 +70,14 @@ This *manifest.ini* file contains a list of information about the snp and the ma
 ### Set the number of processes
 The program gives the user the possibility to define, as input, the number of processes to use. 
 The choice of the number of processes should be carefully considered. Too many processes could, in fact, create problems with the cpu without bringing benefits. 
-If the user does not define an optimal number of processes, this is automatically assigned by the program based on the available cpu. 
+If the user does not define a number of processes, this is automatically assigned by the program based on the available cpu. 
 
-A pool of processes is initialized in order to get a speedup in the processing, with each process running a separate chunk of the protein ids list that needs to be anlyzed.
+A pool of processes is initialized in order to get a speedup in the processing, with each process running a separate chunk of the protein ids list that needs to be analyzed.
 The list is passed to the protein worker function wich extracts the modified sequence of a list of proteins and filters it by substituting the variations. 
 
 ### Asynchronous multiprocessing
-The choice of the processes parallelization has been made to reduce the processing time which otherwise, for a complete genome would have been extremely long. 
+The choice of the processes parallelization has been made to reduce the processing time which otherwise, for a complete genome, would have been extremely long. 
 By parallelizing the processing, breaking into chunks and running each chunk separately, a speedup can be obtained. 
-The multiprocessing package helps using as many core as wanted.
 The choice of asynchronous processing was made considering that, in the case of the program, each process can work independently from the others, without having to wait for a response. 
 
 When all the processes are closed, all the temporary tables created for each process are united in a final merged table that can be visualized as output in a separate file. 
@@ -86,15 +85,15 @@ When all the processes are closed, all the temporary tables created for each pro
 To avoid causing memory issues, since the load of data to analyze can sometimes be substantial, all the temporary tables and the loaded snp are deleted. 
 
 ## Testing 
-In the "test" folder, all the data required to run the test.py file can be found. 
+In the "test" folder, all the data required to run the tests.py file can be found. 
 The latter contains the tests runned in order assert the program precision, using hypothesis testing. 
 To run it from the command line: 
 ```
-python3 test.py 
+python3 tests.py 
 ```
 
 ## An example 
-This section has the purpose of making the use of the application clearer to the user in order to facilitate its use. 
+This section has the purpose of clairfying the use of the application in order to facilitate its usage. 
 Below follows an example of the program running, which can be reproduced with the files contained in the "example" folder.
 
 The vcf file present in this folder is a small selection of genome variations on chromosome twenty-one alone.
@@ -104,5 +103,6 @@ To run it from command line:
 ```
 python3 main.py --genome GRCh37.75 --vcf_file ./example/chr21_NA20502.vcf
 ```
- 
+Despite the reduced dimension of the example file, the processing will take some time to complete, according to the power of the user machine. 
+This is due to the fact that, even if the variations are located only in a specific region of the genome, the program needs to investigate its entirety.  
 

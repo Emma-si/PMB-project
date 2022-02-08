@@ -3,6 +3,8 @@ import glob
 import utils
 import multiprocessing as mp   
 import tqdm 
+import time
+import os
 
 from pyGeno.SNPFiltering import SNPFilter
 from pyGeno.SNPFiltering import SequenceSNP
@@ -45,11 +47,11 @@ def protein_worker( args ):
             sequence = "none"
 
         with open(table_name, 'a+') as file:
-            row = protein_id + "\t" +
-                    transcript_id + "\t" +
-                    name + "\t" +
-                    chromosome_number + "\t" +
-                    sequence + "\t" +
+            row = protein_id + "\t" + \
+                    transcript_id + "\t" + \
+                    name + "\t" + \
+                    chromosome_number + "\t" + \
+                    sequence + "\t" + \
                     '\n'
             file.write(row)
 
@@ -89,6 +91,9 @@ if __name__ == "__main__":
     if n_processes == 0: 
         n_processes = mp.cpu_count() - 3
 
+
+    start_time = time.time()
+
     # Create snp file
     gzipped_vcf_file = utils.zip_vcf_file(vcf_file)
     snp_file, snp_name = utils.create_snp_file(gzipped_vcf_file)
@@ -111,7 +116,7 @@ if __name__ == "__main__":
     protein_ids = [p.id for p in proteins]
 
     # Create the sublists to give in input to the different processes
-    chunks = split_list(protein_ids, n_processes)
+    chunks = utils.split_list(protein_ids, n_processes)
 
     # Define the processes based on the available cpu
     pool = mp.Pool(n_processes)
@@ -128,7 +133,21 @@ if __name__ == "__main__":
     deleteSNPs(snp_name)
 
     table_name = snp_name + ".txt"
-    seg_tables_list = glob.glob("tmp*.txt")
-    merge_tmp_tables(table_name, seg_tables_list)
+    tmp_tables_list = glob.glob("tmp*.txt")
+    utils.merge_tmp_tables(table_name, tmp_tables_list)
+
+    # Delete temporary files to avoid memory issues
+    for tmp_table in tmp_tables_list:
+        os.remove(tmp_table)
+    
+    os.remove("manifest.ini")
+    os.remove(gzipped_vcf_file)
+    os.remove(snp_file)
+
+    # Print of the total time used for the processing 
+    end_time = time.time()
+    total_time = (end_time - start_time)/60
+    print("Genome processed in %.2f minutes" % total_time)
+
 
 

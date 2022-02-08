@@ -41,7 +41,7 @@ def test_merge_tmp_tables(table_name, seg_tables_list):
 
     assert table_lines == seg_lines
 
-if name == "main":
+if __name__ == "__main__":
     test_chuncks_same_length()
 
     test_merge_tmp_tables("test/SNP_chr21_NA20502.txt", ['test/tmp0_SNP_chr21_NA20502.txt', 
