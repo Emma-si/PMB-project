@@ -1,6 +1,9 @@
-from hypothesis import given, settings, strategies as st
-from utils import split_list
+from utils import split_list, merge_tmp_tables
 import os
+from main import genome_to_proteinlist_generator
+from pyGeno.Genome import *
+import pyGeno.bootstrap as B
+
 
 
 def test_chuncks_division_1():
@@ -74,33 +77,72 @@ def test_chunks_division_file():
     for i in range(n):
         chunk_filename = "test/test_split_list_chunk%d.txt" % i 
         os.remove(chunk_filename)
-        
+
 
 def test_merge_tmp_tables():
     """
-    Tests:
-        - if the sum of tmp tables has the same length of the entire table
+    Test:
+        Apply the merge_tmp_tables function to a known splitted file in order to check if the content 
+        and lenght of the created temporary tables matches the original one after the merge.
     """
 
     table_name = "test/SNP_chr21_NA20502.txt"
-    seg_tables_list = ['test/tmp0_SNP_chr21_NA20502.txt', 
-                        'test/tmp1_SNP_chr21_NA20502.txt', 
-                        'test/tmp2_SNP_chr21_NA20502.txt', 
-                        'test/tmp3_SNP_chr21_NA20502.txt', 
-                        'test/tmp4_SNP_chr21_NA20502.txt', 
-                        'test/tmp5_SNP_chr21_NA20502.txt', 
-                        'test/tmp6_SNP_chr21_NA20502.txt', 
-                        'test/tmp7_SNP_chr21_NA20502.txt', 
-                        'test/tmp8_SNP_chr21_NA20502.txt']
+    with open(table_name, "r+") as original_file: 
+        all_lines = original_file.readlines()
+    
+    n = 8
+    chunks = split_list(all_lines, n)
+    tmp_files = []
 
-    with open(table_name, 'r') as ft:
-        table_lines = len(ft.readlines())
+    for i, chunk in enumerate(chunks):
+        chunk_filename = "test/SNP_chr21_NA20502_tmp%d.txt" % i
+        tmp_files.append(chunk_filename)
+        with open(chunk_filename, "a+") as chunk_file:
+            for row in chunk: 
+                chunk_file.write(row)
+
+    merged_file = "test/merged_SNP_chr21_NA20502.txt"
+    merge_tmp_tables(merged_file, tmp_files)
+
+    original_file = open("test/SNP_chr21_NA20502.txt", "r+")
+
+    with open(merged_file, "r+") as merged:
+        for line in merged:
+            assert line == original_file.readline()
+           
+    original_file.close()
+    for i in range(n):
+        chunk_filename = "test/SNP_chr21_NA20502_tmp%d.txt" % i 
+        os.remove(chunk_filename)
+    os.remove(merged_file)
 
 
-    seg_lines = 0
-    for seg_table in seg_tables_list:
-        with open(seg_table, 'r') as st:
-            l = len(st.readlines())
-            seg_lines += l
+def test_genome_to_proteinlist_generator():
+    """
+    Tests:
+        If the output appears as expected. 
+        If, from the reference genome, the rows created are 
+        a list of five elements separated from tab spacing.
+    """
 
-    assert table_lines == seg_lines
+    try:
+        myGeno = Genome(name = "GRCh37.75")
+    except KeyError:
+        B.importRemoteGenome("GRCh37.75")
+        myGeno = Genome(name = "GRCh37.75")
+
+    proteins = myGeno.get(Protein)
+    protein_ids = [p.id for p in proteins]
+
+    for i in range(len(protein_ids)):
+        row = genome_to_proteinlist_generator(protein_ids, "GRCh37.75", [])
+        row = row.__next__().strip()
+        assert len(row.split("\t")) == 5
+
+        # Too much time required to analyze alla genome 
+        if i == 1000:
+            break
+
+
+
+  

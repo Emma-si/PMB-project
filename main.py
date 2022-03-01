@@ -13,6 +13,7 @@ from pyGeno.importation.SNPs import *
 from pyGeno.Genome import *
 
 
+
 def protein_worker( args ):
     '''
     Input: args = [process id, reference genome name, snp name, list protein ids]
@@ -30,12 +31,27 @@ def protein_worker( args ):
 
     table_name = "tmp%d_%s.txt" % (process_id, snp_name)
 
-    # Import genome in the single process
-    # Required because it is not possible to access the genome from other processes
+    with open(table_name, 'a+') as file :
+        for row in genome_to_proteinlist_generator(protein_ids, reference_genome, snp_name) :
+            file.write(row) 
+            progress_bar.update(1) 
+
+
+
+
+def genome_to_proteinlist_generator(protein_ids, reference_genome, snp_name) :
+    '''
+    Input: process id, reference genome name, snp name
+
+    Generator that creates a row with the protein information extracted 
+    from the genome
+    '''
+    
     myGeno = Genome(name = reference_genome, SNPs = snp_name, SNPFilter = MyFilter())
 
     for protein_id in protein_ids:
         protein = myGeno.get(Protein, id = protein_id)[0]
+
 
         transcript_id = protein.transcript.id
         name = protein.name
@@ -46,16 +62,15 @@ def protein_worker( args ):
         except:
             sequence = "none"
 
-        with open(table_name, 'a+') as file:
-            row = protein_id + "\t" + \
-                    transcript_id + "\t" + \
-                    name + "\t" + \
-                    chromosome_number + "\t" + \
-                    sequence + "\t" + \
-                    '\n'
-            file.write(row)
+        row = protein_id + "\t" + \
+              transcript_id + "\t" + \
+              name + "\t" + \
+              chromosome_number + "\t" + \
+              sequence + "\t" + \
+              '\n'
+        yield row
 
-            progress_bar.update(1)  
+
 
 class MyFilter(SNPFilter) :
     '''

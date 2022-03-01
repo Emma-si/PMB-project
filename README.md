@@ -89,7 +89,7 @@ In the "test" folder, all the data required to run the tests.py file can be foun
 The latter contains the tests runned in order assert the program precision, using hypothesis testing. 
 To run it from the command line: 
 ```
-python3 tests.py 
+pytest tests.py
 ```
 
 ## An example 
