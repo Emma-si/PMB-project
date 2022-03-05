@@ -139,7 +139,7 @@ def test_genome_to_proteinlist_generator():
         row = row.__next__().strip()
         assert len(row.split("\t")) == 5
 
-        # Too much time required to analyze alla genome 
+        # Too much time required to analyze all the genome 
         if i == 1000:
             break
 
