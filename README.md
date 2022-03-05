@@ -86,7 +86,7 @@ To avoid causing memory issues, since the load of data to analyze can sometimes 
 
 ## Testing 
 In the "test" folder, all the data required to run the tests.py file can be found. 
-The latter contains the tests runned in order assert the program precision, using hypothesis testing. 
+The latter contains the tests runned in order assert the program precision, using both unit and integration testing. 
 To run it from the command line: 
 ```
 pytest tests.py
