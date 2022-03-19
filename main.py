@@ -5,6 +5,7 @@ import multiprocessing as mp
 import tqdm 
 import time
 import os
+import warnings
 
 from pyGeno.SNPFiltering import SNPFilter
 from pyGeno.SNPFiltering import SequenceSNP
@@ -104,7 +105,8 @@ if __name__ == "__main__":
     n_processes = args.num_processes
 
     if n_processes == 0: 
-        n_processes = mp.cpu_count() - 3
+        warnings.warn("No number of processes specified, the program will use all available cpu. This may slow down your pc.")
+        n_processes = mp.cpu_count()
 
 
     start_time = time.time()
