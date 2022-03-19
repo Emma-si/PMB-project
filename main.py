@@ -135,16 +135,13 @@ if __name__ == "__main__":
     # Create the sublists to give in input to the different processes
     chunks = utils.split_list(protein_ids, n_processes)
 
-    # Define the processes based on the available cpu
-    pool = mp.Pool(n_processes)
-
     # Start processes in asyncronous way
-    for i in range(n_processes):
-        pool.apply_async(protein_worker, args = ([i, genome_name, snp_name, chunks[i]],))
-
-    # Close the current process and wait for the other to close
-    pool.close() 
-    pool.join() 
+    with mp.Pool(processes=n_processes) as pool:
+        for i in range(n_processes):
+            pool.apply_async(protein_worker, args = ([i, genome_name, snp_name, chunks[i]],))
+        # Close the current process and wait for the other to close
+        pool.close() 
+        pool.join() 
     
     # Delete SNP to avoid memory issues
     deleteSNPs(snp_name)
