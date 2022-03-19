@@ -3,9 +3,9 @@ import glob
 import utils
 import multiprocessing as mp   
 import tqdm 
-import time
 import os
 import warnings
+from datetime import datetime
 
 from pyGeno.SNPFiltering import SNPFilter
 from pyGeno.SNPFiltering import SequenceSNP
@@ -114,7 +114,7 @@ if __name__ == "__main__":
         n_processes = mp.cpu_count()
 
 
-    start_time = time.time()
+    start_time = datetime.now()
 
     # Create snp file
     gzipped_vcf_file = utils.zip_vcf_file(vcf_file)
@@ -167,9 +167,9 @@ if __name__ == "__main__":
     os.remove(snp_file)
 
     # Print of the total time used for the processing 
-    end_time = time.time()
-    total_time = (end_time - start_time)/60
-    print("Genome processed in %.2f minutes" % total_time)
+    end_time = datetime.now()
+    total_time = (end_time - start_time)
+    print("Genome processed in" + str(total_time))
 
 
 
