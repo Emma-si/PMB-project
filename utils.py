@@ -18,21 +18,15 @@ def zip_vcf_file(vcf_file : str):
     
     return vcf_zipped_file
 
-def create_snp_file(vcf_zipped_file : str):
-    """
-    Function that create the snp tar file according to the Pygeno parser
-    Input:
-        vcf_zipped_file : path of the vcf zipped file
-    Outputs:
-        vcf_tar_file : path of the new compressed file in the format .tar.gz
-        snp_name : name of the created snp
-    """
-    # Definition of the snp name to associate to each individual
-    snp_filename = vcf_zipped_file[:-7]
-    individual_name = snp_filename.split("/")[-1]
-    snp_name = "SNP_" + individual_name
 
-    vcf_filename = vcf_zipped_file.split("/")[-1]
+def create_manifest_file(snp_name : str, vcf_filename : str):
+    """
+    Function that creates the manifest.ini file according to the Pygeno parser
+    requirements.
+    Input:
+        snp_name : name of the created snp
+        vcf_filename : name of the vcf file
+    """
 
     # Definition and creation of the manifest.ini file required by Pygeno
     with open("manifest.ini", 'w') as manifest_file:
@@ -50,6 +44,26 @@ def create_snp_file(vcf_zipped_file : str):
 
         manifest_file.write("[snps]\n")
         manifest_file.write("filename = " + vcf_filename + "\n")
+
+
+def create_snp_file(vcf_zipped_file : str):
+    """
+    Function that creates the snp tar file according to the Pygeno parser
+    Input:
+        vcf_zipped_file : path of the vcf zipped file
+    Outputs:
+        vcf_tar_file : path of the new compressed file in the format .tar.gz
+        snp_name : name of the created snp
+    """
+    # Definition of the snp name to associate to each individual
+    snp_filename = vcf_zipped_file[:-7]
+    individual_name = snp_filename.split("/")[-1]
+    snp_name = "SNP_" + individual_name
+
+    vcf_filename = vcf_zipped_file.split("/")[-1]
+
+    # Definition and creation of the manifest.ini file required by Pygeno
+    create_manifest_file(snp_name, vcf_filename)
 
     # Creation of the archive according to Pygeno requirements
     vcf_tar_file = snp_filename + ".tar.gz"
