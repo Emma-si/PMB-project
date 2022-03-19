@@ -27,16 +27,21 @@ def protein_worker( args ):
     reference_genome = args[1]
     snp_name = args[2]
     protein_ids = args[3]
+    lock = args[4]
 
-    progress_bar = tqdm.tqdm(total=len(protein_ids), desc = "Process %d" % process_id, position = process_id)
+    with lock:
+        progress_bar = tqdm.tqdm(total=len(protein_ids), desc = "Process %d" % process_id, position = process_id)
 
     table_name = "tmp%d_%s.txt" % (process_id, snp_name)
 
     with open(table_name, 'a+') as file :
         for row in genome_to_proteinlist_generator(protein_ids, reference_genome, snp_name) :
             file.write(row) 
-            progress_bar.update(1) 
-
+            with lock:
+                progress_bar.update(1) 
+    
+    with lock:
+        progress_bar.close()
 
 
 
@@ -135,10 +140,13 @@ if __name__ == "__main__":
     # Create the sublists to give in input to the different processes
     chunks = utils.split_list(protein_ids, n_processes)
 
+    # Lock definition to prevent tqdm from writing at the same time on the terminal
+    lock = mp.Manager().Lock()
+
     # Start processes in asyncronous way
     with mp.Pool(processes=n_processes) as pool:
         for i in range(n_processes):
-            pool.apply_async(protein_worker, args = ([i, genome_name, snp_name, chunks[i]],))
+            pool.apply_async(protein_worker, args = ([i, genome_name, snp_name, chunks[i], lock],))
         # Close the current process and wait for the other to close
         pool.close() 
         pool.join() 
