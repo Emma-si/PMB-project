@@ -1,0 +1,15 @@
+##fileformat=VCFv4.3
+##fileDate=20211001
+##source=PLINKv2.00
+##contig=<ID=21,length=48119740>
+##INFO=<ID=PR,Number=0,Type=Flag,Description="Provisional reference allele, may not be based on real reference genome">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	NA20502_NA20502
+21	9411239	rs559462325	G	A	.	.	PR	GT	0/0
+21	9411245	rs181691356	C	A	.	.	PR	GT	0/0
+21	9411264	rs548263598	A	C	.	.	PR	GT	0/0
+21	9411267	rs561987868	G	T	.	.	PR	GT	0/0
+21	9411302	rs531010746	G	T	.	.	PR	GT	0/0
+21	9411313	rs550852792	G	A	.	.	PR	GT	0/0
+21	9411332	rs571137411	G	T	.	.	PR	GT	0/0
+21	9411347	rs539713234	G	C	.	.	PR	GT	0/0

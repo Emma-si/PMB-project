@@ -1,8 +1,10 @@
-from utils import split_list, merge_tmp_tables
+from utils import split_list, merge_tmp_tables, create_snp_file, create_manifest_file, zip_vcf_file
 import os
 from main import genome_to_proteinlist_generator
 from pyGeno.Genome import Genome, Protein
 import pyGeno.bootstrap as B
+import tarfile
+import gzip
 
 
 
@@ -137,7 +139,7 @@ def test_genome_to_proteinlist_generator():
         If, from the reference genome, the rows created are 
         a list of five elements separated from tab spacing.
     """
-    
+
     # Load genome
     try:
         myGeno = Genome(name = "GRCh37.75")
@@ -159,5 +161,103 @@ def test_genome_to_proteinlist_generator():
             break
 
 
+def test_zip_vcf_file():
+    """
+    Tests: 
+        - if, given a known vcf file in input, the gzipped vcf file, 
+        once extracted, is equal to the original line by line.
+    """
+    
+    vcf_filename = "test/test_create_vcf.vcf"
 
-  
+    # Zip the input vcf file
+    gzipped_vcf_file = zip_vcf_file(vcf_filename)
+
+    # Open again the original file in read mode
+    original_file = open(vcf_filename, "r+")
+
+    # Extract the gzip and compare line by line with the original file 
+    with gzip.open(gzipped_vcf_file, "rt") as zip_file:
+        for line in zip_file:
+            assert line == original_file.readline()
+
+    original_file.close()
+    os.remove(gzipped_vcf_file)
+
+
+
+def test_create_manifest_file():
+    """
+    Tests: 
+        - if, given a handwritten manifest.ini file in input, the created one
+        is equal to it line by line.
+    """
+
+    test_manifest = "test/test_manifest.ini"
+
+    # Definition of expected variables 
+    snp_name = "SNP_test_create_vcf"
+    vcf_filename = "test_create_vcf.vcf.gz"
+
+    create_manifest_file(snp_name, vcf_filename)
+
+    # Open the handwritten file in read mode
+    test_file = open(test_manifest, "rt")
+
+    # Compare line by line the handwritten file and the created one
+    with open("manifest.ini", "rt") as f:
+        for line in f:
+            assert line == test_file.readline()
+
+    test_file.close()
+    os.remove("manifest.ini")
+
+
+def test_create_snp_file():
+    """
+    Tests: 
+        - if the created snp archive contains the two
+        expected files (manifest.ini and the input gzipped vcf).
+        - if the gzipped_vcf_file contained in the archive
+        is equal to the original vcf file.
+    """
+    
+    vcf_filename = "test/test_create_vcf.vcf"
+
+    # Create snp file
+    gzipped_vcf_file = zip_vcf_file(vcf_filename)
+    snp_file, snp_name = create_snp_file(gzipped_vcf_file)
+
+    # Delete gzipped file created by the zip_vcf_file function (already tested)
+    os.remove(gzipped_vcf_file)
+
+    # Open the archive 
+    with tarfile.open(snp_file, "r:gz") as tar:
+        contained_files = tar.getnames()
+
+        # Assert that the archive contains exactly the two expected files
+        assert len(contained_files) == 2
+        assert "manifest.ini" in contained_files
+        assert gzipped_vcf_file.split("/")[-1] in contained_files
+
+        # Extract the contained files from the archive in the test folder
+        tar.extractall("test/")
+
+        # Assert that the extracted gzipped file is the same as 
+        # the original vcf file line by line
+        original_file = open(vcf_filename, "rt")
+        extracted_gzipped_file = "test/" + contained_files[1]
+
+        with gzip.open(extracted_gzipped_file, "rt") as f:
+            for line in f:
+                assert line == original_file.readline()
+
+        original_file.close()
+        # Remove extracted files from the test folder
+        os.remove(extracted_gzipped_file)
+        os.remove("test/manifest.ini")
+
+    # Remove files created by the create_snp_file function
+    os.remove(snp_file)
+    os.remove("manifest.ini")
+
