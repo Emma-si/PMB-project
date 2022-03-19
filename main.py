@@ -9,8 +9,8 @@ import os
 from pyGeno.SNPFiltering import SNPFilter
 from pyGeno.SNPFiltering import SequenceSNP
 import pyGeno.bootstrap as B
-from pyGeno.importation.SNPs import *
-from pyGeno.Genome import *
+from pyGeno.importation.SNPs import importSNPs, deleteSNPs
+from pyGeno.Genome import Genome, Protein
 
 
 
@@ -77,7 +77,7 @@ class MyFilter(SNPFilter) :
     Custom filter that, given the snp alteration, subsitutes it into the protein sequence. 
     '''
     def init(self) :
-            pass
+        pass
 
     def filter(self, chromosome, **SNPs) :
     

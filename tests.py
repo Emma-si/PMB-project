@@ -1,7 +1,7 @@
 from utils import split_list, merge_tmp_tables
 import os
 from main import genome_to_proteinlist_generator
-from pyGeno.Genome import *
+from pyGeno.Genome import Genome, Protein
 import pyGeno.bootstrap as B
 
 
