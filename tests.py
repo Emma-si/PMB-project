@@ -152,7 +152,7 @@ def test_genome_to_proteinlist_generator():
 
     # Assert that the rows are composed of five elements
     i = 0
-    for row in genome_to_proteinlist_generator(protein_ids, "GRCh37.75", []):
+    for row in genome_to_proteinlist_generator(protein_ids, "GRCh37.75", None):
         row = row.strip()
         assert len(row.split("\t")) == 5
 
