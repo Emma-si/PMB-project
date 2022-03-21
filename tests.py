@@ -151,15 +151,15 @@ def test_genome_to_proteinlist_generator():
     protein_ids = [p.id for p in proteins]
 
     # Assert that the rows are composed of five elements
-    for i in range(len(protein_ids)):
-        row = genome_to_proteinlist_generator(protein_ids, "GRCh37.75", [])
-        row = row.__next__().strip()
+    i = 0
+    for row in genome_to_proteinlist_generator(protein_ids, "GRCh37.75", []):
+        row = row.strip()
         assert len(row.split("\t")) == 5
 
         # Too much time required to analyze all the genome 
-        if i == 1000:
+        if i == 100:
             break
-
+        i += 1
 
 def test_zip_vcf_file():
     """
